@@ -6,14 +6,6 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "MOVIES-DF"
-		},
-		"ABS_Databricks_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'ABS_Databricks'"
-		},
-		"MovieBlob_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'MovieBlob'"
 		}
 	},
 	"variables": {
@@ -41,15 +33,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "MoviesCleanFlow",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"MoviesSource": {},
-									"MoviesCleanedSink": {},
-									"MovieCountSink": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -83,7 +68,6 @@
 								"type": "IntegrationRuntimeReference"
 							},
 							"method": "POST",
-							"headers": {},
 							"body": {
 								"value": "{\n  \"title\": \"Movie Cleaning Pipeline Run\",\n  \"message\": \"Movie dataset is cleaned and ready to use!\",\n  \"dataFactoryName\": \"@{pipeline().DataFactory}\",\n  \"pipelineName\": \"@{pipeline().Pipeline}\",\n  \"pipelineRunId\": \"@{pipeline().RunId}\",\n  \"time\": \"@{utcnow()}\"\n}",
 								"type": "Expression"
@@ -95,76 +79,7 @@
 				"lastPublishTime": "2021-02-10T23:03:16Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/MoviesCleanFlow')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/MoviesIn')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "MovieBlob",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": "movies.csv",
-						"container": "movies-input"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "movieId",
-						"type": "String"
-					},
-					{
-						"name": "title",
-						"type": "String"
-					},
-					{
-						"name": "genres",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/MovieBlob')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/MoviesOut')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "MovieBlob",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"container": "movies-output"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/MovieBlob')]"
+				"[concat(variables('factoryId'), '/dataflows/MoviesCleanFlow')]"
 			]
 		},
 		{
@@ -213,65 +128,6 @@
 						"type": "String"
 					}
 				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ABS_Databricks')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ABS_Databricks')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('ABS_Databricks_connectionString')]"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/MovieBlob')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('MovieBlob_connectionString')]"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "AutoResolve",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 0
-						}
-					}
-				}
 			},
 			"dependsOn": []
 		},
@@ -330,10 +186,7 @@
 					"script": "source(output(\n\t\tmovieId as short,\n\t\ttitle as string,\n\t\tgenres as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> MoviesSource\nMoviesSource derive(Year = toInteger(trim(right(title, 6), '()')),\n\t\tTitle = toString(left(title, length(title)-6))) ~> YearExtraction\nYearExtraction derive(genres = split(genres, '|')) ~> GenreArray\nGenreArray derive(Genre1 = genres[1],\n\t\tGenre2 = genres[2],\n\t\tGenre3 = genres[3],\n\t\tGenre4 = genres[4],\n\t\tGenre5 = genres[5]) ~> GenreExtraction\nGenreExtraction select(mapColumn(\n\t\tmovieId,\n\t\tYear,\n\t\tTitle = YearExtraction@Title,\n\t\tGenre1,\n\t\tGenre2,\n\t\tGenre3,\n\t\tGenre4,\n\t\tGenre5\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DeleteTitleGenres\nDeleteTitleGenres aggregate(groupBy(Year),\n\tMovieCount = count()) ~> MovieCountByYear\nDeleteTitleGenres aggregate(groupBy(Genre1),\n\tGenre1Count = count()) ~> Aggregate1\nMovieCountByYear sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['movies-cleaned.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MoviesCleanedSink\nDeleteTitleGenres sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['movies-by-year.csv'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> MovieCountSink"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/MoviesIn')]",
-				"[concat(variables('factoryId'), '/datasets/MoviesOut')]"
-			]
+			"dependsOn": []
 		}
 	]
 }

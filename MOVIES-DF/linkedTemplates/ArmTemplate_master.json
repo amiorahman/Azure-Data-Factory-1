@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "MOVIES-DF"
 		},
+		"ABS_Databricks_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ABS_Databricks'"
+		},
 		"MovieBlob_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'MovieBlob'"
@@ -37,6 +41,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"ABS_Databricks_connectionString": {
+						"value": "[parameters('ABS_Databricks_connectionString')]"
 					},
 					"MovieBlob_connectionString": {
 						"value": "[parameters('MovieBlob_connectionString')]"

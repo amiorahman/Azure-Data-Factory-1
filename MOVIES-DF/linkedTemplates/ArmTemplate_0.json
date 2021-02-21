@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "MOVIES-DF"
 		},
+		"ABS_Databricks_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ABS_Databricks'"
+		},
 		"MovieBlob_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'MovieBlob'"
@@ -34,6 +38,25 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ABS_Databricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ABS_Databricks_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/MovieBlob')]",
@@ -120,6 +143,57 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/MovieBlob')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MyExcelFile')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ABS_Databricks",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Cars",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "data.xlsx",
+						"container": "databricks-excel"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Make",
+						"type": "String"
+					},
+					{
+						"name": "Model",
+						"type": "String"
+					},
+					{
+						"name": "Type",
+						"type": "String"
+					},
+					{
+						"name": "Origin",
+						"type": "String"
+					},
+					{
+						"name": "DriveTrain",
+						"type": "String"
+					},
+					{
+						"name": "Length",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ABS_Databricks')]"
 			]
 		},
 		{
@@ -218,13 +292,47 @@
 							},
 							"traceLevel": "Fine"
 						}
+					},
+					{
+						"name": "Send Notification Email",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "DataFlow_MovieClean",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://prod-16.germanywestcentral.logic.azure.com:443/workflows/a55eb4e210df4a4fa1e72c888ede6555/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=DQ-TvpzRAwtXLLIPEqrIqo0PGh-WogoThdLPD_mkwAo",
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{\n  \"title\": \"Movie Cleaning Pipeline Run\",\n  \"message\": \"Movie dataset is cleaned and ready to use!\",\n  \"dataFactoryName\": \"@{pipeline().DataFactory}\",\n  \"pipelineName\": \"@{pipeline().Pipeline}\",\n  \"pipelineRunId\": \"@{pipeline().RunId}\",\n  \"time\": \"@{utcnow()}\"\n}",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"annotations": [],
 				"lastPublishTime": "2021-02-10T23:03:16Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/MoviesCleanFlow')]"
+				"[concat(variables('factoryId'), '/dataflows/MoviesCleanFlow')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
 			]
 		}
 	]

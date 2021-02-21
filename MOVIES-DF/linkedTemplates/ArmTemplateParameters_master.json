@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "MOVIES-DF"
 		},
+		"ABS_Databricks_connectionString": {
+			"value": ""
+		},
 		"MovieBlob_connectionString": {
 			"value": ""
 		},
