@@ -25,6 +25,38 @@
 					},
 					"traceLevel": "Fine"
 				}
+			},
+			{
+				"name": "Send Notification Email",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "DataFlow_MovieClean",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-16.germanywestcentral.logic.azure.com:443/workflows/a55eb4e210df4a4fa1e72c888ede6555/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=DQ-TvpzRAwtXLLIPEqrIqo0PGh-WogoThdLPD_mkwAo",
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "POST",
+					"body": {
+						"value": "{\n  \"title\": \"Movie Cleaning Pipeline Run\",\n  \"message\": \"Movie dataset is cleaned and ready to use!\",\n  \"dataFactoryName\": \"@{pipeline().DataFactory}\",\n  \"pipelineName\": \"@{pipeline().Pipeline}\",\n  \"pipelineRunId\": \"@{pipeline().RunId}\",\n  \"time\": \"@{utcnow()}\"\n}",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"annotations": [],
