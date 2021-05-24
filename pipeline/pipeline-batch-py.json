@@ -1,0 +1,37 @@
+{
+	"name": "pipeline-batch-py",
+	"properties": {
+		"activities": [
+			{
+				"name": "kostenstellen_custom_batch_exec",
+				"type": "Custom",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"command": "python test.py",
+					"resourceLinkedService": {
+						"referenceName": "LS_Storage_Kostenstellen",
+						"type": "LinkedServiceReference"
+					},
+					"folderPath": "controlling-input",
+					"referenceObjects": {
+						"linkedServices": [],
+						"datasets": []
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_Kostenstellen",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
